@@ -64,7 +64,9 @@ export class UserService {
   }
 
   private excludePassword(user: User): UserResponse {
-    const { password, ...userResponse } = user;
+    const userResponse = structuredClone(user);
+    delete userResponse.password;
+
     return userResponse;
   }
 }

@@ -6,16 +6,12 @@ import { validateUuid } from '../utils/uuid.util';
 import { CascadeDeletionService } from '../utils/cascade-deletion.service';
 
 @Injectable()
-export class ArtistService implements OnModuleInit {
+export class ArtistService {
   private artists: Artist[] = [];
 
   constructor(
     private readonly cascadeDeletionService: CascadeDeletionService,
   ) {}
-
-  onModuleInit() {
-    this.cascadeDeletionService.registerHandler(this);
-  }
 
   findAll(): Artist[] {
     return this.artists;
@@ -64,6 +60,4 @@ export class ArtistService implements OnModuleInit {
   exists(id: string): boolean {
     return this.artists.some((artist) => artist.id === id);
   }
-
-  onArtistDeleted(artistId: string): void {}
 }
