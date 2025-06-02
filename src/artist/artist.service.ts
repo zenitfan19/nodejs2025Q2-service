@@ -1,12 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Artist } from './artist.entity';
 import { CreateArtistDto, UpdateArtistDto } from './artist.dto';
 import { validateUuid } from '../utils/uuid.util';
+import { CascadeDeletionService } from '../utils/cascade-deletion.service';
 
 @Injectable()
-export class ArtistService {
+export class ArtistService implements OnModuleInit {
   private artists: Artist[] = [];
+
+  constructor(
+    private readonly cascadeDeletionService: CascadeDeletionService,
+  ) {}
+
+  onModuleInit() {
+    this.cascadeDeletionService.registerHandler(this);
+  }
 
   findAll(): Artist[] {
     return this.artists;
@@ -41,7 +50,6 @@ export class ArtistService {
     artist.grammy = updateArtistDto.grammy;
     return artist;
   }
-
   remove(id: string): void {
     validateUuid(id);
     const index = this.artists.findIndex((artist) => artist.id === id);
@@ -49,6 +57,8 @@ export class ArtistService {
       throw new NotFoundException('Artist not found');
     }
     this.artists.splice(index, 1);
+
+    this.cascadeDeletionService.onArtistDeleted(id);
   }
 
   exists(id: string): boolean {

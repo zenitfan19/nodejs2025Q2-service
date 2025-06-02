@@ -1,12 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Track } from './track.entity';
 import { CreateTrackDto, UpdateTrackDto } from './track.dto';
 import { validateUuid } from '../utils/uuid.util';
+import { CascadeDeletionService } from '../utils/cascade-deletion.service';
 
 @Injectable()
-export class TrackService {
+export class TrackService implements OnModuleInit {
   private tracks: Track[] = [];
+
+  constructor(
+    private readonly cascadeDeletionService: CascadeDeletionService,
+  ) {}
+
+  onModuleInit() {
+    this.cascadeDeletionService.registerHandler(this);
+  }
 
   findAll(): Track[] {
     return this.tracks;
@@ -45,7 +54,6 @@ export class TrackService {
     track.duration = updateTrackDto.duration;
     return track;
   }
-
   remove(id: string): void {
     validateUuid(id);
     const index = this.tracks.findIndex((track) => track.id === id);
@@ -53,6 +61,8 @@ export class TrackService {
       throw new NotFoundException('Track not found');
     }
     this.tracks.splice(index, 1);
+
+    this.cascadeDeletionService.onTrackDeleted(id);
   }
 
   exists(id: string): boolean {

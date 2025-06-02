@@ -3,26 +3,32 @@ import {
   NotFoundException,
   BadRequestException,
   UnprocessableEntityException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { Favorites, FavoritesResponse } from './favorites.entity';
 import { ArtistService } from '../artist/artist.service';
 import { AlbumService } from '../album/album.service';
 import { TrackService } from '../track/track.service';
 import { validateUuid } from '../utils/uuid.util';
+import { CascadeDeletionService } from '../utils/cascade-deletion.service';
 
 @Injectable()
-export class FavoritesService {
+export class FavoritesService implements OnModuleInit {
   private favorites: Favorites = {
     artists: [],
     albums: [],
     tracks: [],
   };
-
   constructor(
     private readonly artistService: ArtistService,
     private readonly albumService: AlbumService,
     private readonly trackService: TrackService,
+    private readonly cascadeDeletionService: CascadeDeletionService,
   ) {}
+
+  onModuleInit() {
+    this.cascadeDeletionService.registerHandler(this);
+  }
 
   findAll(): FavoritesResponse {
     const favoriteArtists = this.favorites.artists
