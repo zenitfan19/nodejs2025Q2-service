@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { Artist } from './artist.entity';
 import { CreateArtistDto, UpdateArtistDto } from './artist.dto';
