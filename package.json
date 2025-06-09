@@ -29,7 +29,8 @@
     "migration:revert": "npm run typeorm -- -d src/typeorm/datasource.ts migration:revert",
     "migration:show": "npm run typeorm -- -d src/typeorm/datasource.ts migration:show",
     "docker:dev": "docker-compose up --build --watch",
-    "docker:down": "docker-compose down -v"
+    "docker:down": "docker-compose down -v",
+    "docker:scan": "docker scout cves nodejs2025q2-service-app"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.3",
