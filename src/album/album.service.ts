@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Album } from './album.entity';
 import { CreateAlbumDto, UpdateAlbumDto } from './album.dto';
 import { validateUuid } from '../utils/uuid.util';
@@ -7,9 +8,9 @@ import { CascadeDeletionService } from '../utils/cascade-deletion.service';
 
 @Injectable()
 export class AlbumService implements OnModuleInit {
-  private albums: Album[] = [];
-
   constructor(
+    @InjectRepository(Album)
+    private readonly albumRepository: Repository<Album>,
     private readonly cascadeDeletionService: CascadeDeletionService,
   ) {}
 
@@ -17,61 +18,62 @@ export class AlbumService implements OnModuleInit {
     this.cascadeDeletionService.registerHandler(this);
   }
 
-  findAll(): Album[] {
-    return this.albums;
+  async findAll(): Promise<Album[]> {
+    return await this.albumRepository.find({ relations: ['artist'] });
   }
 
-  findOne(id: string): Album {
+  async findOne(id: string): Promise<Album> {
     validateUuid(id);
-    const album = this.albums.find((album) => album.id === id);
+    const album = await this.albumRepository.findOne({
+      where: { id },
+      relations: ['artist', 'tracks'],
+    });
     if (!album) {
       throw new NotFoundException('Album not found');
     }
     return album;
   }
 
-  create(createAlbumDto: CreateAlbumDto): Album {
-    const album: Album = {
-      id: randomUUID(),
+  async create(createAlbumDto: CreateAlbumDto): Promise<Album> {
+    const album = this.albumRepository.create({
       name: createAlbumDto.name,
       year: createAlbumDto.year,
       artistId: createAlbumDto.artistId || null,
-    };
-    this.albums.push(album);
-    return album;
-  }
-
-  update(id: string, updateAlbumDto: UpdateAlbumDto): Album {
-    validateUuid(id);
-    const album = this.albums.find((album) => album.id === id);
-    if (!album) {
-      throw new NotFoundException('Album not found');
-    }
-    album.name = updateAlbumDto.name;
-    album.year = updateAlbumDto.year;
-    album.artistId = updateAlbumDto.artistId || null;
-    return album;
-  }
-  remove(id: string): void {
-    validateUuid(id);
-    const index = this.albums.findIndex((album) => album.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Album not found');
-    }
-    this.albums.splice(index, 1);
-
-    this.cascadeDeletionService.onAlbumDeleted(id);
-  }
-
-  exists(id: string): boolean {
-    return this.albums.some((album) => album.id === id);
-  }
-
-  onArtistDeleted(artistId: string): void {
-    this.albums.forEach((album) => {
-      if (album.artistId === artistId) {
-        album.artistId = null;
-      }
     });
+    return await this.albumRepository.save(album);
+  }
+
+  async update(id: string, updateAlbumDto: UpdateAlbumDto): Promise<Album> {
+    const album = await this.findOne(id);
+
+    if (updateAlbumDto.name !== undefined) {
+      album.name = updateAlbumDto.name;
+    }
+    if (updateAlbumDto.year !== undefined) {
+      album.year = updateAlbumDto.year;
+    }
+    if (updateAlbumDto.artistId !== undefined) {
+      album.artistId = updateAlbumDto.artistId;
+    }
+
+    return await this.albumRepository.save(album);
+  }
+  async remove(id: string): Promise<void> {
+    const album = await this.findOne(id);
+    await this.albumRepository.remove(album);
+    await this.cascadeDeletionService.onAlbumDeleted(id);
+  }
+
+  async exists(id: string): Promise<boolean> {
+    try {
+      await this.findOne(id);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async onArtistDeleted(artistId: string): Promise<void> {
+    await this.albumRepository.update({ artistId }, { artistId: null });
   }
 }
