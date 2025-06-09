@@ -16,5 +16,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.POSTGRES_PASSWORD || 'postgres',
   database: process.env.POSTGRES_DB || 'home_library',
   entities: [User, Artist, Album, Track, Favorites],
-  synchronize: false,
+  synchronize: true,
 };

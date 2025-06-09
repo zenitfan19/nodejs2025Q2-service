@@ -30,7 +30,34 @@ Create a `.env` file in the root directory (or use the existing one):
 PORT={port}
 ```
 
-### 4. Database Setup
+### 4. Docker Setup
+
+#### Prerequisites
+
+- Docker - [Download & Install Docker](https://docs.docker.com/get-docker/)
+- Docker Compose - [Download & Install Docker Compose](https://docs.docker.com/compose/install/)
+
+#### Running with Docker
+
+1. Build and start the containers:
+
+```bash
+npm run docker:dev
+```
+
+2. Check running containers:
+
+```bash
+docker ps
+```
+
+3. Stop the containers:
+
+```bash
+npm run docker:down
+```
+
+### 5. Database Setup
 
 Before running the application, you need to set up the database:
 
@@ -52,7 +79,7 @@ DB_PORT={db_port}
 npm run migration:run       # Apply migrations to database
 ```
 
-### 5. Run the application
+### 6. Run the application
 
 ```bash
 npm run start
@@ -60,7 +87,7 @@ npm run start
 
 The application will start on the port specified in your `.env` file (default: 4000).
 
-### 5. Access the API Documentation
+### 7. Access the API Documentation
 
 After starting the app, you can access the interactive OpenAPI documentation:
 

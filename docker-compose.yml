@@ -16,6 +16,7 @@ services:
       - home-library-network
     environment:
       - DB_HOST=postgres
+      - DB_PORT=5432
 
   postgres:
     build:
