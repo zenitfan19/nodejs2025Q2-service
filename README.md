@@ -41,8 +41,16 @@ PORT={port}
 
 1. Build and start the containers:
 
+In development mode with watch flag:
+
 ```bash
 npm run docker:dev
+```
+
+In production mode (reduced image size):
+
+```bash
+npm run docker:prod
 ```
 
 2. Check running containers:

@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     container_name: home-library-app
     restart: unless-stopped
     env_file:
@@ -17,14 +17,8 @@ services:
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
-    develop:
-      watch:
-        - action: sync
-          path: ./src
-          target: /app/src
-    command: >
-      sh -c "npm run migration:run &&
-             npm run start:dev"
+      - NODE_ENV=production
+
   postgres:
     build:
       context: .

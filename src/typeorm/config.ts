@@ -8,6 +8,8 @@ import { Favorites } from '../favorites/favorites.entity';
 
 dotenvConfig();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -16,5 +18,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.POSTGRES_PASSWORD || 'postgres',
   database: process.env.POSTGRES_DB || 'home_library',
   entities: [User, Artist, Album, Track, Favorites],
-  synchronize: true,
+  synchronize: isProduction,
 };
