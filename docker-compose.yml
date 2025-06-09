@@ -29,7 +29,8 @@ services:
     ports:
       - '${DB_PORT:-5432}:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
+      - db_logs:/var/log/postgresql
     networks:
       - home-library-network
     healthcheck:
@@ -44,4 +45,7 @@ networks:
     name: home-library-network
 
 volumes:
-  postgres_data:
+  db_data:
+    driver: local
+  db_logs:
+    driver: local
