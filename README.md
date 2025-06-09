@@ -27,10 +27,32 @@ npm install
 Create a `.env` file in the root directory (or use the existing one):
 
 ```env
-PORT=4000
+PORT={port}
 ```
 
-### 4. Run the application
+### 4. Database Setup
+
+Before running the application, you need to set up the database:
+
+1. Add database configuration to the `.env`:
+
+```env
+POSTGRES_USER={user}
+POSTGRES_PASSWORD={password}
+POSTGRES_DB={db_name}
+DB_HOST={db_host}
+DB_PORT={db_port}
+```
+
+2. Create local database with {db_name}
+
+3. Run migrations:
+
+```bash
+npm run migration:run       # Apply migrations to database
+```
+
+### 5. Run the application
 
 ```bash
 npm run start

@@ -8,7 +8,7 @@ import { AlbumModule } from './album/album.module';
 import { TrackModule } from './track/track.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { CascadeDeletionModule } from './utils/cascade-deletion.module';
-import { typeOrmConfig } from './typeorm.config';
+import { typeOrmConfig } from './typeorm/config';
 
 @Module({
   imports: [

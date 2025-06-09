@@ -1,10 +1,10 @@
 import { config as dotenvConfig } from 'dotenv';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User } from './user/user.entity';
-import { Artist } from './artist/artist.entity';
-import { Album } from './album/album.entity';
-import { Track } from './track/track.entity';
-import { Favorites } from './favorites/favorites.entity';
+import { User } from '../user/user.entity';
+import { Artist } from '../artist/artist.entity';
+import { Album } from '../album/album.entity';
+import { Track } from '../track/track.entity';
+import { Favorites } from '../favorites/favorites.entity';
 
 dotenvConfig();
 
@@ -16,5 +16,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.POSTGRES_PASSWORD || 'postgres',
   database: process.env.POSTGRES_DB || 'home_library',
   entities: [User, Artist, Album, Track, Favorites],
-  synchronize: true,
+  synchronize: false,
 };
