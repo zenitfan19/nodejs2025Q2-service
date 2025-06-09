@@ -27,10 +27,67 @@ npm install
 Create a `.env` file in the root directory (or use the existing one):
 
 ```env
-PORT=4000
+PORT={port}
 ```
 
-### 4. Run the application
+### 4. Docker Setup
+
+#### Prerequisites
+
+- Docker - [Download & Install Docker](https://docs.docker.com/get-docker/)
+- Docker Compose - [Download & Install Docker Compose](https://docs.docker.com/compose/install/)
+
+#### Running with Docker
+
+1. Build and start the containers:
+
+In development mode with watch flag:
+
+```bash
+npm run docker:dev
+```
+
+In production mode (reduced image size):
+
+```bash
+npm run docker:prod
+```
+
+2. Check running containers:
+
+```bash
+docker ps
+```
+
+3. Stop the containers:
+
+```bash
+npm run docker:down
+```
+
+### 5. Database Setup
+
+Before running the application, you need to set up the database:
+
+1. Add database configuration to the `.env`:
+
+```env
+POSTGRES_USER={user}
+POSTGRES_PASSWORD={password}
+POSTGRES_DB={db_name}
+DB_HOST={db_host}
+DB_PORT={db_port}
+```
+
+2. Create local database with {db_name}
+
+3. Run migrations:
+
+```bash
+npm run migration:run       # Apply migrations to database
+```
+
+### 6. Run the application
 
 ```bash
 npm run start
@@ -38,7 +95,7 @@ npm run start
 
 The application will start on the port specified in your `.env` file (default: 4000).
 
-### 5. Access the API Documentation
+### 7. Access the API Documentation
 
 After starting the app, you can access the interactive OpenAPI documentation:
 

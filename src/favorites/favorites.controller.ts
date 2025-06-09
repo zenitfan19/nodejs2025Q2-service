@@ -15,46 +15,46 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get()
-  findAll(): FavoritesResponse {
-    return this.favoritesService.findAll();
+  async findAll(): Promise<FavoritesResponse> {
+    return await this.favoritesService.findAll();
   }
 
   @Post('track/:id')
   @HttpCode(HttpStatus.CREATED)
-  addTrack(@Param('id') id: string): { message: string } {
-    this.favoritesService.addTrack(id);
+  async addTrack(@Param('id') id: string): Promise<{ message: string }> {
+    await this.favoritesService.addTrack(id);
     return { message: 'Track added to favorites' };
   }
 
   @Delete('track/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeTrack(@Param('id') id: string): void {
-    this.favoritesService.removeTrack(id);
+  async removeTrack(@Param('id') id: string): Promise<void> {
+    await this.favoritesService.removeTrack(id);
   }
 
   @Post('album/:id')
   @HttpCode(HttpStatus.CREATED)
-  addAlbum(@Param('id') id: string): { message: string } {
-    this.favoritesService.addAlbum(id);
+  async addAlbum(@Param('id') id: string): Promise<{ message: string }> {
+    await this.favoritesService.addAlbum(id);
     return { message: 'Album added to favorites' };
   }
 
   @Delete('album/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeAlbum(@Param('id') id: string): void {
-    this.favoritesService.removeAlbum(id);
+  async removeAlbum(@Param('id') id: string): Promise<void> {
+    await this.favoritesService.removeAlbum(id);
   }
 
   @Post('artist/:id')
   @HttpCode(HttpStatus.CREATED)
-  addArtist(@Param('id') id: string): { message: string } {
-    this.favoritesService.addArtist(id);
+  async addArtist(@Param('id') id: string): Promise<{ message: string }> {
+    await this.favoritesService.addArtist(id);
     return { message: 'Artist added to favorites' };
   }
 
   @Delete('artist/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  removeArtist(@Param('id') id: string): void {
-    this.favoritesService.removeArtist(id);
+  async removeArtist(@Param('id') id: string): Promise<void> {
+    await this.favoritesService.removeArtist(id);
   }
 }

@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: home-library-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - '${PORT:-4000}:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - home-library-network
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - NODE_ENV=production
+
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile.DB
+    container_name: home-library-postgres
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - db_logs:/var/log/postgresql
+    networks:
+      - home-library-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  home-library-network:
+    driver: bridge
+    name: home-library-network
+
+volumes:
+  db_data:
+    driver: local
+  db_logs:
+    driver: local

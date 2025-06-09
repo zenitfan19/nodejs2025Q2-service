@@ -18,32 +18,32 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  findAll(): UserResponse[] {
-    return this.userService.findAll();
+  async findAll(): Promise<UserResponse[]> {
+    return await this.userService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): UserResponse {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<UserResponse> {
+    return await this.userService.findOne(id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createUserDto: CreateUserDto): UserResponse {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto): Promise<UserResponse> {
+    return await this.userService.create(createUserDto);
   }
 
   @Put(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
-  ): UserResponse {
-    return this.userService.update(id, updatePasswordDto);
+  ): Promise<UserResponse> {
+    return await this.userService.update(id, updatePasswordDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string): void {
-    this.userService.remove(id);
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.userService.remove(id);
   }
 }

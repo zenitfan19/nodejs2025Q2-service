@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Track } from './track.entity';
 import { CreateTrackDto, UpdateTrackDto } from './track.dto';
 import { validateUuid } from '../utils/uuid.util';
@@ -7,9 +8,9 @@ import { CascadeDeletionService } from '../utils/cascade-deletion.service';
 
 @Injectable()
 export class TrackService implements OnModuleInit {
-  private tracks: Track[] = [];
-
   constructor(
+    @InjectRepository(Track)
+    private readonly trackRepository: Repository<Track>,
     private readonly cascadeDeletionService: CascadeDeletionService,
   ) {}
 
@@ -17,71 +18,71 @@ export class TrackService implements OnModuleInit {
     this.cascadeDeletionService.registerHandler(this);
   }
 
-  findAll(): Track[] {
-    return this.tracks;
+  async findAll(): Promise<Track[]> {
+    return await this.trackRepository.find({ relations: ['artist', 'album'] });
   }
 
-  findOne(id: string): Track {
+  async findOne(id: string): Promise<Track> {
     validateUuid(id);
-    const track = this.tracks.find((track) => track.id === id);
+    const track = await this.trackRepository.findOne({
+      where: { id },
+      relations: ['artist', 'album'],
+    });
     if (!track) {
       throw new NotFoundException('Track not found');
     }
     return track;
   }
 
-  create(createTrackDto: CreateTrackDto): Track {
-    const track: Track = {
-      id: randomUUID(),
+  async create(createTrackDto: CreateTrackDto): Promise<Track> {
+    const track = this.trackRepository.create({
       name: createTrackDto.name,
       artistId: createTrackDto.artistId || null,
       albumId: createTrackDto.albumId || null,
       duration: createTrackDto.duration,
-    };
-    this.tracks.push(track);
-    return track;
-  }
-
-  update(id: string, updateTrackDto: UpdateTrackDto): Track {
-    validateUuid(id);
-    const track = this.tracks.find((track) => track.id === id);
-    if (!track) {
-      throw new NotFoundException('Track not found');
-    }
-    track.name = updateTrackDto.name;
-    track.artistId = updateTrackDto.artistId || null;
-    track.albumId = updateTrackDto.albumId || null;
-    track.duration = updateTrackDto.duration;
-    return track;
-  }
-  remove(id: string): void {
-    validateUuid(id);
-    const index = this.tracks.findIndex((track) => track.id === id);
-    if (index === -1) {
-      throw new NotFoundException('Track not found');
-    }
-    this.tracks.splice(index, 1);
-
-    this.cascadeDeletionService.onTrackDeleted(id);
-  }
-
-  exists(id: string): boolean {
-    return this.tracks.some((track) => track.id === id);
-  }
-
-  onArtistDeleted(artistId: string): void {
-    this.tracks.forEach((track) => {
-      if (track.artistId === artistId) {
-        track.artistId = null;
-      }
     });
+    return await this.trackRepository.save(track);
   }
 
-  onAlbumDeleted(albumId: string): void {
-    this.tracks.forEach((track) => {
-      if (track.albumId === albumId) {
-        track.albumId = null;
-      }
-    });
+  async update(id: string, updateTrackDto: UpdateTrackDto): Promise<Track> {
+    const track = await this.findOne(id);
+
+    if (updateTrackDto.name !== undefined) {
+      track.name = updateTrackDto.name;
+    }
+    if (updateTrackDto.artistId !== undefined) {
+      track.artistId = updateTrackDto.artistId;
+    }
+    if (updateTrackDto.albumId !== undefined) {
+      track.albumId = updateTrackDto.albumId;
+    }
+    if (updateTrackDto.duration !== undefined) {
+      track.duration = updateTrackDto.duration;
+    }
+
+    return await this.trackRepository.save(track);
+  }
+
+  async remove(id: string): Promise<void> {
+    const track = await this.findOne(id);
+    await this.trackRepository.remove(track);
+    await this.cascadeDeletionService.onTrackDeleted(id);
+  }
+
+  async exists(id: string): Promise<boolean> {
+    try {
+      await this.findOne(id);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async onArtistDeleted(artistId: string): Promise<void> {
+    await this.trackRepository.update({ artistId }, { artistId: null });
+  }
+
+  async onAlbumDeleted(albumId: string): Promise<void> {
+    await this.trackRepository.update({ albumId }, { albumId: null });
   }
 }

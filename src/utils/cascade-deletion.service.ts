@@ -1,9 +1,9 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
 export interface CascadeDeletionHandler {
-  onArtistDeleted?(artistId: string): void;
-  onAlbumDeleted?(albumId: string): void;
-  onTrackDeleted?(trackId: string): void;
+  onArtistDeleted?(artistId: string): Promise<void>;
+  onAlbumDeleted?(albumId: string): Promise<void>;
+  onTrackDeleted?(trackId: string): Promise<void>;
 }
 
 @Injectable()
@@ -16,27 +16,33 @@ export class CascadeDeletionService implements OnModuleInit {
     this.handlers.push(handler);
   }
 
-  onArtistDeleted(artistId: string): void {
-    this.handlers.forEach((handler) => {
-      if (handler.onArtistDeleted) {
-        handler.onArtistDeleted(artistId);
-      }
-    });
+  async onArtistDeleted(artistId: string): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (handler.onArtistDeleted) {
+          await handler.onArtistDeleted(artistId);
+        }
+      }),
+    );
   }
 
-  onAlbumDeleted(albumId: string): void {
-    this.handlers.forEach((handler) => {
-      if (handler.onAlbumDeleted) {
-        handler.onAlbumDeleted(albumId);
-      }
-    });
+  async onAlbumDeleted(albumId: string): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (handler.onAlbumDeleted) {
+          await handler.onAlbumDeleted(albumId);
+        }
+      }),
+    );
   }
 
-  onTrackDeleted(trackId: string): void {
-    this.handlers.forEach((handler) => {
-      if (handler.onTrackDeleted) {
-        handler.onTrackDeleted(trackId);
-      }
-    });
+  async onTrackDeleted(trackId: string): Promise<void> {
+    await Promise.all(
+      this.handlers.map(async (handler) => {
+        if (handler.onTrackDeleted) {
+          await handler.onTrackDeleted(trackId);
+        }
+      }),
+    );
   }
 }
