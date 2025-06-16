@@ -272,3 +272,24 @@ For more information, visit: https://code.visualstudio.com/docs/editor/debugging
 - `403` - Forbidden (Wrong password)
 - `404` - Not Found (Entity doesn't exist)
 - `422` - Unprocessable Entity (Referenced entity doesn't exist)
+
+## Logging
+
+The application includes a comprehensive logging system that:
+
+- **Always enabled**: Logs all requests, responses, errors, and exceptions
+- **Multiple levels**: ERROR, WARN, INFO, DEBUG (configurable via `LOG_LEVEL`)
+- **Dual output**: Console (stdout) and file (`logs/app.log`)
+- **File rotation**: Overwrites log file when size limit is reached
+- **Global coverage**: HTTP requests, exceptions, and process-level errors
+
+### Configuration
+
+Add to your `.env` file:
+
+```env
+LOG_LEVEL=INFO              # ERROR, WARN, INFO, DEBUG
+LOG_TO_FILE=true           # Enable file logging
+LOG_DIRECTORY=./logs       # Log file directory
+LOG_MAX_FILE_SIZE_KB=1024  # File size limit before rotation
+```

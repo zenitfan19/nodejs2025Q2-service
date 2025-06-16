@@ -6,12 +6,47 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
+import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { LoggingService } from './logging/logging.service';
 
 dotenvConfig();
 
 async function bootstrap() {
   const port = process.env.PORT || 4000;
   const app = await NestFactory.create(AppModule);
+
+  const loggingService = app.get(LoggingService);
+
+  app.useGlobalFilters(new GlobalExceptionFilter(loggingService));
+
+  app.useGlobalInterceptors(new LoggingInterceptor(loggingService));
+
+  process.on('uncaughtException', (error: Error) => {
+    loggingService.error(
+      `Uncaught Exception: ${error.message}`,
+      'UncaughtException',
+      {
+        stack: error.stack,
+        name: error.name,
+      },
+    );
+    // Don't exit immediately, allow time for logging
+    setTimeout(() => process.exit(1), 1000);
+  });
+
+  process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+    loggingService.error(
+      `Unhandled Rejection: ${reason}`,
+      'UnhandledRejection',
+      {
+        reason: String(reason),
+        promise: String(promise),
+      },
+    );
+  });
+
+  loggingService.info('Application starting up', 'Application');
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -36,16 +71,22 @@ async function bootstrap() {
     if (fs.existsSync(apiDocPath)) {
       const yamlContent = fs.readFileSync(apiDocPath, 'utf8');
       document = yaml.load(yamlContent) as any;
-      console.log('Loaded custom OpenAPI specification from api-updated.yaml');
+      loggingService.info(
+        'Loaded custom OpenAPI specification from api-updated.yaml',
+        'Application',
+      );
     } else {
       // Fallback to auto-generated documentation
       document = SwaggerModule.createDocument(app, config);
-      console.log('Using auto-generated OpenAPI specification');
+      loggingService.info(
+        'Using auto-generated OpenAPI specification',
+        'Application',
+      );
     }
   } catch (error) {
-    console.warn(
-      'Failed to load custom API spec, using auto-generated:',
-      error.message,
+    loggingService.warn(
+      `Failed to load custom API spec, using auto-generated: ${error.message}`,
+      'Application',
     );
     document = SwaggerModule.createDocument(app, config);
   }
@@ -55,8 +96,14 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`API Documentation available at: http://localhost:${port}/doc`);
+  loggingService.info(
+    `Application is running on: http://localhost:${port}`,
+    'Application',
+  );
+  loggingService.info(
+    `API Documentation available at: http://localhost:${port}/doc`,
+    'Application',
+  );
 }
 
 bootstrap();
