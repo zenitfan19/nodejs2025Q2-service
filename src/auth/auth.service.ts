@@ -19,7 +19,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(signupDto: SignupDto): Promise<{ message: string }> {
+  async signup(signupDto: SignupDto): Promise<{ message: string; id: string }> {
     const { login, password } = signupDto;
 
     const existingUser = await this.userRepository.findOne({
@@ -39,9 +39,9 @@ export class AuthService {
       updatedAt: Date.now(),
     });
 
-    await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
 
-    return { message: 'User created successfully' };
+    return { message: 'User created successfully', id: savedUser.id };
   }
 
   async login(

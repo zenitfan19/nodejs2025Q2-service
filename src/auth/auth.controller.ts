@@ -19,7 +19,7 @@ export class AuthController {
   async signup(
     @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
     signupDto: SignupDto,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; id: string }> {
     return this.authService.signup(signupDto);
   }
 
