@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../user/user.entity';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 
 @Injectable()
 export class AuthService {
@@ -70,6 +72,44 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
+  }
+
+  async refresh(
+    refreshDto: RefreshDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const { refreshToken } = refreshDto;
+
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: process.env.JWT_SECRET_REFRESH_KEY,
+      });
+
+      const user = await this.userRepository.findOne({
+        where: { id: payload.userId },
+      });
+
+      if (!user) {
+        throw new ForbiddenException('Invalid refresh token');
+      }
+
+      const tokenPayload = { userId: user.id, login: user.login };
+      const newAccessToken = this.jwtService.sign(tokenPayload, {
+        secret: process.env.JWT_SECRET_KEY,
+        expiresIn: process.env.TOKEN_EXPIRE_TIME || '1h',
+      });
+
+      const newRefreshToken = this.jwtService.sign(tokenPayload, {
+        secret: process.env.JWT_SECRET_REFRESH_KEY,
+        expiresIn: process.env.TOKEN_REFRESH_EXPIRE_TIME || '24h',
+      });
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch {
+      throw new ForbiddenException('Invalid or expired refresh token');
+    }
   }
 
   async validateUser(userId: string): Promise<User> {

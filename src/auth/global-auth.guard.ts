@@ -14,7 +14,12 @@ export class GlobalAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const { url } = request;
 
-    const publicRoutes = ['/auth/signup', '/auth/login', '/doc'];
+    const publicRoutes = [
+      '/auth/signup',
+      '/auth/login',
+      '/auth/refresh',
+      '/doc',
+    ];
 
     const isPublicRoute =
       url === '/' || publicRoutes.some((route) => url.startsWith(route));
