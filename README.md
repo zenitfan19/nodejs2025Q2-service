@@ -24,84 +24,259 @@ npm install
 
 ### 3. Environment Setup
 
-Create a `.env` file in the root directory (or use the existing one):
+Create a `.env` file in the root directory with the following configuration:
 
 ```env
-PORT={port}
+# Server Configuration
+PORT=4000
+
+# Database Configuration (for Docker setup)
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=home_library
+DB_HOST=postgres
+DB_PORT=5432
+
+# JWT Configuration
+JWT_SECRET=your-secret-key-here
+JWT_ACCESS_TOKEN_EXPIRE_TIME=1h
+JWT_REFRESH_TOKEN_EXPIRE_TIME=24h
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_TO_FILE=true
+LOG_DIRECTORY=./logs
+LOG_MAX_FILE_SIZE_KB=1024
 ```
 
-### 4. Docker Setup
+### 4. Running with Docker/Podman (Recommended)
 
 #### Prerequisites
 
-- Docker - [Download & Install Docker](https://docs.docker.com/get-docker/)
-- Docker Compose - [Download & Install Docker Compose](https://docs.docker.com/compose/install/)
+- Docker or Podman - [Download & Install Docker](https://docs.docker.com/get-docker/) or [Podman](https://podman.io/getting-started/installation)
+- Docker Compose or Podman Compose
 
-#### Running with Docker
-
-1. Build and start the containers:
-
-In development mode with watch flag:
+#### Start the Application
 
 ```bash
-npm run docker:dev
+# Using Docker
+docker-compose up --build -d
+
+# Using Podman
+podman compose up --build -d
+
+# Alternative: Using npm scripts
+npm run docker:dev     # Development mode with hot reload
+npm run docker:prod    # Production mode
 ```
 
-In production mode (reduced image size):
+#### Verify containers are running
 
 ```bash
-npm run docker:prod
-```
-
-2. Check running containers:
-
-```bash
+# Docker
 docker ps
+
+# Podman
+podman compose ps
 ```
 
-3. Stop the containers:
+You should see:
+
+- `home-library-app` - The NestJS application (port 4000)
+- `home-library-postgres` - PostgreSQL database (port 5432)
+
+#### Stop the application
 
 ```bash
+# Docker
+docker-compose down
+
+# Podman
+podman compose down
+
+# Alternative: Using npm scripts
 npm run docker:down
 ```
 
-### 5. Database Setup
+### 5. Access the Application
 
-Before running the application, you need to set up the database:
+Once the containers are running, you can access:
 
-1. Add database configuration to the `.env`:
+- **API**: http://localhost:4000
+- **Swagger UI Documentation**: http://localhost:4000/doc
+- **Health Check**: http://localhost:4000 (should return "Hello World!")
+- **OpenAPI JSON**: http://localhost:4000/doc-json
 
-```env
-POSTGRES_USER={user}
-POSTGRES_PASSWORD={password}
-POSTGRES_DB={db_name}
-DB_HOST={db_host}
-DB_PORT={db_port}
-```
-
-2. Create local database with {db_name}
-
-3. Run migrations:
+### 6. Verify Installation
 
 ```bash
-npm run migration:run       # Apply migrations to database
+# Check containers are running
+podman compose ps
+
+# Test health endpoint
+curl http://localhost:4000
+
+# Test Swagger UI is accessible
+curl -s http://localhost:4000/doc | grep -i swagger
+
+# Verify OpenAPI includes authentication
+curl -s http://localhost:4000/doc-json | jq '.components.securitySchemes'
 ```
 
-### 6. Run the application
+Expected responses:
+
+- Health check: `Hello World!`
+- Swagger check: Should return HTML with "swagger" references
+- Security schemes: Should show JWT bearer configuration
+
+### 7. Database Setup
+
+The database is automatically set up when using Docker/Podman:
+
+- PostgreSQL container starts automatically
+- Database schema is created via TypeORM migrations
+- Migrations run automatically on application startup
+- No manual database setup required
+
+**Manual setup (if running without containers):**
 
 ```bash
-npm run start
+# Install PostgreSQL locally
+# Create database: home_library
+# Update .env with your credentials
+
+# Run migrations manually
+npm run build
+npm run migration:run
 ```
 
-The application will start on the port specified in your `.env` file (default: 4000).
+## Authentication System
 
-### 7. Access the API Documentation
+The application uses JWT (JSON Web Tokens) for authentication with access and refresh tokens.
 
-After starting the app, you can access the interactive OpenAPI documentation:
+### Authentication Endpoints
 
-**Swagger UI**: http://localhost:4000/doc/
+#### Sign Up
 
-For more information about OpenAPI/Swagger, visit https://swagger.io/.
+```bash
+POST /auth/signup
+Content-Type: application/json
+
+{
+  "login": "your_username",
+  "password": "your_password"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "User created successfully",
+  "id": "uuid-of-created-user"
+}
+```
+
+#### Login
+
+```bash
+POST /auth/login
+Content-Type: application/json
+
+{
+  "login": "your_username",
+  "password": "your_password"
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### Refresh Token
+
+```bash
+POST /auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "your_refresh_token_here"
+}
+```
+
+**Response:**
+
+```json
+{
+  "accessToken": "new_access_token",
+  "refreshToken": "new_refresh_token"
+}
+```
+
+### Using Authentication with Swagger UI
+
+1. Open Swagger UI: http://localhost:4000/doc
+2. Click the **"Authorize"** button (🔒 lock icon) at the top right
+3. Enter your access token (without "Bearer" prefix)
+4. Click **"Authorize"** then **"Close"**
+5. All protected endpoints will now include your JWT token automatically
+
+**Swagger UI Features:**
+
+- Interactive API testing
+- Request/response examples
+- Automatic JWT token inclusion for protected endpoints
+- Persistent authorization across browser sessions
+- Real-time API documentation
+
+### Testing Authentication with curl
+
+```bash
+# 1. Create a user
+curl -X POST http://localhost:4000/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{"login": "testuser", "password": "testpass123"}'
+
+# 2. Login to get tokens
+TOKEN_RESPONSE=$(curl -s -X POST http://localhost:4000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"login": "testuser", "password": "testpass123"}')
+
+# 3. Extract access token (requires jq)
+ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.accessToken')
+
+# 4. Use token for protected endpoints
+curl -X GET http://localhost:4000/user \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+
+# 5. Test refresh token
+REFRESH_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.refreshToken')
+curl -X POST http://localhost:4000/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d "{\"refreshToken\": \"$REFRESH_TOKEN\"}"
+```
+
+### Protected Endpoints
+
+All endpoints except authentication are protected and require a valid JWT token:
+
+- All `/user` endpoints
+- All `/artist` endpoints
+- All `/album` endpoints
+- All `/track` endpoints
+- All `/favs` endpoints
+
+### Token Information
+
+- **Access Token**: Valid for 1 hour (configurable via `JWT_ACCESS_TOKEN_EXPIRE_TIME`)
+- **Refresh Token**: Valid for 24 hours (configurable via `JWT_REFRESH_TOKEN_EXPIRE_TIME`)
+- **Format**: Bearer token in Authorization header
+- **Algorithm**: HMAC SHA256
 
 ## API Endpoints
 
@@ -209,34 +384,55 @@ After the application is running, open a new terminal and enter:
 npm run test
 ```
 
-### Run specific test suite
-
-```bash
-npm run test -- <path to suite>
-```
-
-### Run all tests with authorization
+### Run all tests with authorization (excludes refresh token tests)
 
 ```bash
 npm run test:auth
 ```
 
-### Run specific test suite with authorization
+### Run refresh token tests specifically
 
 ```bash
-npm run test:auth -- <path to suite>
+npm run test:refresh
 ```
 
-### Example test commands
+### Run specific test suites
 
 ```bash
-# Test specific modules
-npm run test -- test/user.e2e-spec.ts
-npm run test -- test/favorites.e2e-spec.ts
+# Individual test files (without authorization)
+npm run test -- users.e2e.spec.ts
+npm run test -- artists.e2e.spec.ts
+npm run test -- albums.e2e.spec.ts
+npm run test -- tracks.e2e.spec.ts
+npm run test -- favorites.e2e.spec.ts
 
-# Run with verbose output
-npm run test -- --verbose
+# Individual test files (with authorization)
+npm run test:auth -- auth/users.e2e.spec.ts
+npm run test:auth -- auth/artists.e2e.spec.ts
+npm run test:auth -- auth/albums.e2e.spec.ts
+npm run test:auth -- auth/tracks.e2e.spec.ts
+npm run test:auth -- auth/favorites.e2e.spec.ts
 ```
+
+### Additional test options
+
+```bash
+# Run with coverage
+npm run test:cov
+
+# Run in watch mode (for development)
+npm run test:watch
+
+# Debug tests
+npm run test:debug
+```
+
+### Test Environment
+
+- Tests run against the containerized application at `http://localhost:4000`
+- Database is automatically seeded/cleaned between tests
+- Auth tests create temporary users and clean up after themselves
+- All tests run in band (sequentially) to avoid conflicts
 
 ## Development
 
@@ -283,13 +479,17 @@ The application includes a comprehensive logging system that:
 - **File rotation**: Overwrites log file when size limit is reached
 - **Global coverage**: HTTP requests, exceptions, and process-level errors
 
-### Configuration
+### Log Viewing
 
-Add to your `.env` file:
+```bash
+# View real-time logs from containers
+podman compose logs -f app
 
-```env
-LOG_LEVEL=INFO              # ERROR, WARN, INFO, DEBUG
-LOG_TO_FILE=true           # Enable file logging
-LOG_DIRECTORY=./logs       # Log file directory
-LOG_MAX_FILE_SIZE_KB=1024  # File size limit before rotation
+# View log file directly
+tail -f logs/app.log
+
+# Search logs for specific events
+grep "ERROR" logs/app.log
+grep "JWT" logs/app.log
+grep "signup\|login" logs/app.log
 ```
