@@ -39,7 +39,12 @@ export class AuthController {
   async refresh(
     @Body() body: any,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    if (!body.refreshToken || typeof body.refreshToken !== 'string') {
+    if (
+      !body ||
+      !body.refreshToken ||
+      typeof body.refreshToken !== 'string' ||
+      body.refreshToken.trim() === ''
+    ) {
       throw new UnauthorizedException('Refresh token is required');
     }
 
