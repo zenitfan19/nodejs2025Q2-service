@@ -9,11 +9,13 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { TrackService } from './track.service';
 import { CreateTrackDto, UpdateTrackDto } from './track.dto';
 import { Track } from './track.entity';
 
 @Controller('track')
+@ApiBearerAuth()
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
