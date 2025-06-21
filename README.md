@@ -69,7 +69,13 @@ docker-compose ps
 npm run migration:run
 ```
 
-### 6. Run Tests
+### 6. Run application
+
+```bash
+npm run start
+```
+
+### 7. Run Tests
 
 ```bash
 # Run tests with authorization
@@ -79,7 +85,7 @@ npm run test:auth
 npm run test:refresh
 ```
 
-### 7. Stop PostgreSQL Container
+### 8. Stop PostgreSQL Container
 
 ```bash
 docker-compose down
