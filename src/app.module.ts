@@ -8,12 +8,16 @@ import { AlbumModule } from './album/album.module';
 import { TrackModule } from './track/track.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { CascadeDeletionModule } from './utils/cascade-deletion.module';
+import { LoggingModule } from './logging/logging.module';
+import { AuthModule } from './auth/auth.module';
 import { typeOrmConfig } from './typeorm/config';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
+    LoggingModule,
     CascadeDeletionModule,
+    AuthModule,
     UserModule,
     ArtistModule,
     AlbumModule,

@@ -7,10 +7,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { FavoritesService } from './favorites.service';
 import { FavoritesResponse } from './favorites.entity';
 
 @Controller('favs')
+@ApiBearerAuth()
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 

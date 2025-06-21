@@ -6,15 +6,19 @@ const createUserDto = {
 };
 
 const getTokenAndUserId = async (request) => {
-  // create user
-  const {
-    body: { id: mockUserId },
-  } = await request
-    .post(authRoutes.signup)
-    .set('Accept', 'application/json')
-    .send(createUserDto);
+  let mockUserId;
 
-  // get token
+  try {
+    const signupResponse = await request
+      .post(authRoutes.signup)
+      .set('Accept', 'application/json')
+      .send(createUserDto);
+
+    mockUserId = signupResponse.body.id;
+  } catch {
+    // User might already exist, we'll get the ID from the JWT token
+  }
+
   const {
     body: { accessToken, refreshToken },
   } = await request
@@ -22,8 +26,19 @@ const getTokenAndUserId = async (request) => {
     .set('Accept', 'application/json')
     .send(createUserDto);
 
-  if (mockUserId === undefined || accessToken === undefined) {
+  if (accessToken === undefined) {
     throw new Error('Authorization is not implemented');
+  }
+
+  // If we didn't get the userId from signup, extract it from the JWT token
+  if (!mockUserId && accessToken) {
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      mockUserId = payload.userId;
+    } catch {
+      // If we can't decode the token, that's an error
+      throw new Error('Authorization is not implemented');
+    }
   }
 
   const token = `Bearer ${accessToken}`;

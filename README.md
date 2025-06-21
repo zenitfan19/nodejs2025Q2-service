@@ -6,8 +6,9 @@ A NestJS-based REST API service for managing a home music library with users, ar
 
 - Git - [Download & Install Git](https://git-scm.com/downloads).
 - Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
+- Docker - [Download & Install Docker](https://docs.docker.com/get-docker/)
 
-## Getting Started
+## Setup Instructions
 
 ### 1. Clone the repository
 
@@ -24,30 +25,86 @@ npm install
 
 ### 3. Environment Setup
 
-Create a `.env` file in the root directory (or use the existing one):
+Create a `.env` file in the root directory with the following configuration:
 
 ```env
-PORT={port}
+PORT=4000
+
+# JWT Configuration
+JWT_SECRET_KEY=secret123123
+JWT_SECRET_REFRESH_KEY=secret123123
+TOKEN_EXPIRE_TIME=1h
+TOKEN_REFRESH_EXPIRE_TIME=24h
+
+# Password Encryption
+CRYPT_SALT=10
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_TO_FILE=true
+LOG_DIRECTORY=./logs
+LOG_MAX_FILE_SIZE_KB=1024
+
+# Database Configuration
+DB_PORT=5432
+DB_HOST=localhost
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=home_library
 ```
 
-### 4. Docker Setup
-
-#### Prerequisites
-
-- Docker - [Download & Install Docker](https://docs.docker.com/get-docker/)
-- Docker Compose - [Download & Install Docker Compose](https://docs.docker.com/compose/install/)
-
-#### Running with Docker
-
-1. Build and start the containers:
-
-In development mode with watch flag:
+### 4. Start PostgreSQL Container
 
 ```bash
-npm run docker:dev
+# Start only PostgreSQL container
+docker-compose up postgres -d
+
+# Verify PostgreSQL is running
+docker-compose ps
 ```
 
-In production mode (reduced image size):
+### 5. Run Database Migrations
+
+```bash
+npm run migration:run
+```
+
+### 6. Run application
+
+```bash
+npm run start
+```
+
+### 7. Run Tests
+
+```bash
+# Run tests with authorization
+npm run test:auth
+
+# Run refresh token tests
+npm run test:refresh
+```
+
+### 8. Stop PostgreSQL Container
+
+```bash
+docker-compose down
+```
+
+## Logging
+
+### Logging Levels
+
+The `LOG_LEVEL` environment variable controls what gets logged:
+
+- `ERROR` - Only errors
+- `WARN` - Warnings and errors
+- `INFO` - Informational messages, warnings, and errors (default)
+- `DEBUG` - All messages including debug information
+
+### Log Location
+
+Logs are saved to: `./logs/app.log`
 
 ```bash
 npm run docker:prod
